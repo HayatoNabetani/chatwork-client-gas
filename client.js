@@ -1,5 +1,5 @@
 
-(function(global){
+(function (global) {
   var ChatWork = (function() {
     
     function ChatWork(config)
@@ -74,6 +74,43 @@
     ChatWork.prototype.getMyTasks = function(params) {
       return this.get('/my/tasks', params);
     };
+
+    /*** 以下からカスタマイズ ***/
+
+    /**
+    * チャットの情報を取得する
+    */
+    ChatWork.prototype.getRoomInfo = function(params) {
+      return this.get("/rooms/" + params.room_id);
+    };
+    
+    /**
+    * チャットの情報を変更する
+    */
+    ChatWork.prototype.changeRoomInfo = function(params) {
+      return this.put("/rooms/" + params.room_id, params.body);
+    };
+
+    /**
+    * チャットを退席/削除する
+    */
+    ChatWork.prototype.deleteRoom = function(params) {
+      return this.delete("/rooms/" + params.room_id, params.body);
+    };
+
+    /**
+    * チャットのファイル一覧を取得する
+    */
+    ChatWork.prototype.getFileList = function(params) {
+      return this.get("/rooms/" + params.room_id + "/files", params.body);
+    };
+
+    /**
+    * チャットにファイルをアップロードする
+    */
+    ChatWork.prototype.uploadFile = function(params) {
+      return this.post('/rooms/'+ params.room_id + "/files", params.payload);
+    };
     
     
     ChatWork.prototype._sendRequest = function(params)
@@ -102,18 +139,34 @@
       });
     };
   
-    ChatWork.prototype.put = function(endpoint, put_data) {
+    ChatWork.prototype.put = function (endpoint, put_data) {
+      put_data = put_data || {};
+
+      var path = endpoint;
+
+      // put_dataがあればクエリーを生成する
+      // かなり簡易的なので必要に応じて拡張する
+      var query_string_list = [];
+      for (var key in put_data) {
+          query_string_list.push(
+              encodeURIComponent(key) + "=" + encodeURIComponent(put_data[key])
+          );
+      }
+
+      if (query_string_list.length > 0) {
+          path += "?" + query_string_list.join("&");
+      }
+      
       return this._sendRequest({
-        'method': 'put',
-        'path': endpoint,
-        'payload': put_data
+        'method': "put",
+        'path': path,
       });
     };
   
     ChatWork.prototype.get = function(endpoint, get_data) { 
       get_data = get_data || {};
       
-      var path = endpoint
+      var path = endpoint;
     
       // get_dataがあればクエリーを生成する
       // かなり簡易的なので必要に応じて拡張する
@@ -128,6 +181,30 @@
       
       return this._sendRequest({
         'method': 'get',
+        'path': path
+      });
+    };
+
+    ChatWork.prototype.delete = function(endpoint, delete_data) {
+      delete_data = delete_data || {};
+
+      var path = endpoint;
+
+      // delete_dataがあればクエリーを生成する
+      // かなり簡易的なので必要に応じて拡張する
+      var query_string_list = [];
+      for (var key in delete_data) {
+        query_string_list.push(
+            encodeURIComponent(key) + "=" + encodeURIComponent(delete_data[key])
+        );
+      }
+
+      if (query_string_list.length > 0) {
+          path += "?" + query_string_list.join("&");
+      }
+
+      return this._sendRequest({
+        'method': 'delete',
         'path': path
       });
     };
